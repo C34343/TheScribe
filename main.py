@@ -12,8 +12,8 @@ class Main:
 
   BG = pygame.image.load("sprites/parchment.jpg").convert()
 
-  handList = [Card(200, 200), Card(400, 200)]
-  handOfCards = pygame.sprite.Group()
+  handList = [Card(200, 200, 0), Card(400, 200, 1)]
+  handOfCards = pygame.sprite.LayeredUpdates()
   handOfCards.add(handList[0])
   handOfCards.add(handList[1])
 
@@ -36,10 +36,12 @@ class Main:
             exit()
 
           if event.key == pygame.K_a:
-            Main.handList.append(Card())
+            Main.handList.append(Card(index = len(Main.handList)))
             Main.handOfCards.add(Main.handList[-1])
             Main.posHand()
-        
+
+      Main.handOfCards.update()  
+
       Main.handOfCards.draw(Main.screen)
 
       pygame.display.flip()
@@ -48,7 +50,7 @@ class Main:
   def posHand():
     cardAmount = len(Main.handList)
     for card in Main.handList:
-      card.setX((800 / cardAmount) * (Main.handList.index(card) + 1) + 400 - (400/cardAmount))
+      card.setX((900 / cardAmount) * (Main.handList.index(card) + 1) + 350 - (450/cardAmount))
       card.setY(800)
 
 if __name__ == "__main__":
