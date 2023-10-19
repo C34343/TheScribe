@@ -10,14 +10,19 @@ class Card(pygame.sprite.Sprite):
     self.yMove = pygame.math.Vector2(0, 0)
     self.index = index
     self.hovering = False
+    self.following = False
+
+  def setLayer(self, layer):
+    group = self.groups()[0]
+    self.index = layer
+    group.change_layer(self, layer)
 
   def update(self):
-    pos = pygame.mouse.get_pos()
-    hit = self.rect.collidepoint(pos) or self.rect.collidepoint(pos[0], pos[1]-100)
-    if hit:
-      self.hover()
+    if self.following:
+      self.rect.center = pygame.mouse.get_pos()
     else:
-      self.unhover()
+      move = pygame.math.Vector2((self.x-self.rect.x)/5, (self.y-self.rect.y)/5)
+      self.rect.move_ip(move)
 
   def hover(self):
     targetY = self.y - 100
@@ -27,7 +32,7 @@ class Card(pygame.sprite.Sprite):
 
     if not self.hovering:
       group = self.groups()[0]
-      self.index = group.get_layer_of_sprite(self)
+      # self.index = group.get_layer_of_sprite(self)
       group.move_to_front(self)
 
     self.hovering = True
@@ -39,9 +44,15 @@ class Card(pygame.sprite.Sprite):
 
     if self.hovering:
       group = self.groups()[0]
-      group.change_layer(self, self.index-1)
+      group.change_layer(self, self.index)
     
     self.hovering = False
+
+  def follow(self):
+    self.following = True
+  
+  def unfollow(self):
+    self.following = False
 
   def setX(self, x):
     self.x = x

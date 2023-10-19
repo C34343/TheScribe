@@ -40,7 +40,22 @@ class Main:
             Main.handOfCards.add(Main.handList[-1])
             Main.posHand()
 
-      Main.handOfCards.update()  
+        if event.type == pygame.MOUSEBUTTONDOWN:
+          card = Main.selectCard()
+          if card != None:
+            card.follow()
+
+        if event.type == pygame.MOUSEBUTTONUP:
+          card = Main.selectCard()
+          if card != None:
+            card.unfollow()
+
+      try:
+        Main.selectCard().hover()
+      except (AttributeError):
+        pass
+
+      Main.handOfCards.update()
 
       Main.handOfCards.draw(Main.screen)
 
@@ -49,9 +64,36 @@ class Main:
   @staticmethod
   def posHand():
     cardAmount = len(Main.handList)
-    for card in Main.handList:
-      card.setX((900 / cardAmount) * (Main.handList.index(card) + 1) + 350 - (450/cardAmount))
-      card.setY(800)
+    for i, card in enumerate(Main.handList):
+      card.setLayer(i)
+      card.setX((800 / cardAmount) * (Main.handList.index(card) + 1) + 400 - (400/cardAmount))
+      card.setY(700)
+
+  @staticmethod
+  def selectCard():
+    
+    hitCards = []
+    hitCardVal = []
+    for i in Main.handList:
+      pos = pygame.mouse.get_pos()
+      hit = i.rect.collidepoint(pos) or i.rect.collidepoint(pos[0], pos[1]-100)
+      if hit:
+        hitCards.append(i)
+        hitCardVal.append(i.groups()[0].get_layer_of_sprite(i))
+      else:
+        i.unhover()
+    
+    if len(hitCardVal) > 0:
+      highestVal = hitCardVal.index(max(hitCardVal))
+    else:
+      return None
+    
+    for i, card in enumerate(hitCards):
+      if i != highestVal:
+        card.unhover()
+      else:
+        return card
+
 
 if __name__ == "__main__":
   pygame.init()
