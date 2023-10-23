@@ -1,9 +1,10 @@
 import pygame
-from constants import FPS
+from constants import *
 from card import Card
+from cardSpace import CardSpace
 
 class Main:
-  screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+  screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
   pygame.display.set_caption("The Scribe")
   clock = pygame.time.Clock()
   running = True
@@ -11,16 +12,21 @@ class Main:
   hover = False
 
   BG = pygame.image.load("sprites/parchment.jpg").convert()
+  BG = pygame.transform.scale(BG, (SCREEN_WIDTH * 1.05, SCREEN_HEIGHT * 1.05))
 
-  handList = [Card(200, 200, 0), Card(400, 200, 1)]
+  handList = []
   handOfCards = pygame.sprite.LayeredUpdates()
-  handOfCards.add(handList[0])
-  handOfCards.add(handList[1])
 
+  playerSpaceList = [CardSpace(), CardSpace(), CardSpace(), CardSpace()]
+  playerCardSpaces = pygame.sprite.Group()
+  for i in playerSpaceList:
+    playerCardSpaces.add(i)
+  placedCards = pygame.sprite.Group()
 
   @staticmethod
   def main():
     Main.posHand()
+    Main.posPlayerSpaces()
     while Main.running:
       Main.screen.blit(Main.BG, (0, 0))
       Main.clock.tick(FPS)
@@ -42,13 +48,21 @@ class Main:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
           card = Main.selectCard()
-          if card != None:
+          if card is not None:
             card.follow()
 
         if event.type == pygame.MOUSEBUTTONUP:
-          card = Main.selectCard()
-          if card != None:
-            card.unfollow()
+          for i in Main.handList:
+            if i.following:
+              for j in Main.playerSpaceList:
+                if j.card is None and j.rect.collidepoint(pygame.mouse.get_pos()):
+                  i.unfollow()
+                  j.storeCard(i)
+                  Main.placedCards.add(i)
+                  Main.handList.remove(i)
+                  Main.handOfCards.remove(i)
+                  break
+              i.unfollow()
 
       try:
         Main.selectCard().hover()
@@ -56,6 +70,10 @@ class Main:
         pass
 
       Main.handOfCards.update()
+
+      Main.placedCards.draw(Main.screen)
+
+      Main.playerCardSpaces.draw(Main.screen)
 
       Main.handOfCards.draw(Main.screen)
 
@@ -66,17 +84,26 @@ class Main:
     cardAmount = len(Main.handList)
     for i, card in enumerate(Main.handList):
       card.setLayer(i)
-      card.setX((800 / cardAmount) * (Main.handList.index(card) + 1) + 400 - (400/cardAmount))
-      card.setY(700)
+      card.setX((HAND_SPACE / cardAmount) * (Main.handList.index(card) + 1) + HAND_MARGIN - (HAND_SPACE/2/cardAmount))
+      card.setY(HAND_HEIGHT)
+
+  @staticmethod
+  def posPlayerSpaces():
+    spaceAmount = len(Main.playerSpaceList)
+    for i, space in enumerate(Main.playerSpaceList):
+      space.setX((PLACE_SPACE / spaceAmount) * (Main.playerSpaceList.index(space) + 1) + PLACE_MARGIN - (PLACE_SPACE/2/spaceAmount))
+      space.setY(PLACE_HEIGHT)
 
   @staticmethod
   def selectCard():
     
     hitCards = []
     hitCardVal = []
+    isFollowing = False
     for i in Main.handList:
       pos = pygame.mouse.get_pos()
       hit = i.rect.collidepoint(pos) or i.rect.collidepoint(pos[0], pos[1]-100)
+      isFollowing = i.following or isFollowing
       if hit:
         hitCards.append(i)
         hitCardVal.append(i.groups()[0].get_layer_of_sprite(i))
@@ -89,7 +116,7 @@ class Main:
       return None
     
     for i, card in enumerate(hitCards):
-      if i != highestVal:
+      if i != highestVal or isFollowing:
         card.unhover()
       else:
         return card
