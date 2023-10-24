@@ -42,7 +42,7 @@ class Main:
             exit()
 
           if event.key == pygame.K_a:
-            Main.handList.append(Card(index = len(Main.handList)))
+            Main.handList.append(Card(SCREEN_WIDTH/2, SCREEN_HEIGHT*1.5, index = len(Main.handList)))
             Main.handOfCards.add(Main.handList[-1])
             Main.posHand()
 
@@ -63,12 +63,14 @@ class Main:
                   Main.handOfCards.remove(i)
                   break
               i.unfollow()
+          Main.posHand()
 
       try:
         Main.selectCard().hover()
       except (AttributeError):
         pass
 
+      Main.playerCardSpaces.update()
       Main.handOfCards.update()
 
       Main.placedCards.draw(Main.screen)

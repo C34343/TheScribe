@@ -8,6 +8,10 @@ class CardSpace(pygame.sprite.Sprite):
     self.x = x
     self.y = y
     self.card = card
+
+  def update(self):
+    if self.card is not None:
+      self.card.update()
   
   def storeCard(self, card):
     self.card = card
